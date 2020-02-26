@@ -1,5 +1,9 @@
+# easiersnmp
+
 *easiersnmp* is a wrapper around [*easysnmp*](https://github.com/kamakazikamikaze/easysnmp) to make it even easier to use. 
 It also includes an alternative implementation of [*easysnmptable*](https://github.com/wolcomm/easysnmptable).
+
+## Python types
 
 While I really like *easysnmp*, it returns instances of ``SNMPVariable`` instead of of the basic Python data types. 
 In addition the actual value (``SNMPVariable.value``) will always be a string, even if the underlying SNMP type is numeric.
@@ -19,7 +23,7 @@ print(type(result.value)
 # str
 ```
 
-*easiersnmp* changes this behaviour by converting ``SNMPVariable.value`` 
+*easiersnmp* changes this behaviour by converting ``SNMPVariable.value`` into the correct data type.
 
 SNMP GET in *easiersnmp*
 ```python
@@ -35,3 +39,24 @@ print(result.oid, result.oid_index, result.snmp_type, result.value)
 print(type(result.value)
 # int
 ```
+
+The table below shows how values are converted.
+
+| ``SNMPVariable.snmp_type`` | Python type |
+|---|---|
+| INTEGER32 | ``int`` |
+| INTEGER | ``int`` |
+| UNSIGNED32 | int |
+| GAUGE | int |
+| IPADDR | ``ipaddress.IPv4Address``/``ipaddress.IPv6Address`` |
+| OCTETSTR | (read note below) |
+| TICKS | ``datetime.timedelta`` |
+| OPAQUE | |
+| OBJECTID | |
+| NETADDR | ``ipaddress.IPv4Address``/``ipaddress.IPv6Address`` |
+| COUNTER64 | int |
+| NULL | None |
+| BITS | |
+| UINTEGER | int |
+
+
