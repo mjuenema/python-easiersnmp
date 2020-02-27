@@ -3,7 +3,8 @@ FROM gitpod/workspace-full
 USER root
 
 RUN apt-get update && \
-    apt-get install libsnmp-base libsnmp-dev
+    apt-get install -y libsnmp-base libsnmp-dev && \
+    pip3 install easysnmp
                     
 USER gitpod
 
