@@ -3,7 +3,7 @@ FROM gitpod/workspace-full
 USER root
 
 RUN apt-get update && \
-    apt-get install net-snmp-dev
+    apt-get install libsnmp-base libsnmp-dev
                     
 USER gitpod
 
