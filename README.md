@@ -1,5 +1,7 @@
 # easiersnmp
 
+**This project is currently in the planning stage**
+
 *easiersnmp* is a wrapper around [*easysnmp*](https://github.com/kamakazikamikaze/easysnmp) to make it even easier to use. 
 It also includes an alternative implementation of [*easysnmptable*](https://github.com/wolcomm/easysnmptable).
 
