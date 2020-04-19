@@ -1,12 +1,64 @@
-"""
-
-"""
 
 import easysnmp
+import datetime
 
 # SNMPVariable
-class SNMPVariable(easysnmp.SNMPVariable):
-    pass
+class SNMPVariable(object):
+    def __init__(self, session, variable):
+        """The interface of `easiersnmp.SNMPVariable` is different from
+           `easysnmp.SNMPVariable`. It is not meant to be instantiated 
+           directly by other modules than `easiersnmp`.
+           
+           :param session: Instance of `easiersnmp.Session` as it contains
+                the conversion functions which may be overwritten by
+                derived classes.
+            :param variable: Instance of `easysnmp.SNMPVariable` whose 
+                attributes will be extracted to populate this class.
+           
+        """
+        
+        
+        # Copy `oid`, `oid_index` and `snmp_type`. 
+        #
+        self.oid = variable.oid
+        self.oid_index = variable.oid_index
+        self.snmp_type = variable.snmp_type
+        
+        
+        # Convert value.
+        #
+        if self.snmp_type == 'INTEGER32':
+            self.value = session.integer32(variable.value)
+        elif self.snmp_type == 'INTEGER':
+            self.value = session.integer(variable.value)
+        elif self.snmp_type == 'UNSIGNED32':
+            self.value = session.unsigned32(variable.value)
+        elif self.snmp_type == 'GAUGE':
+            self.value = session.gauge(variable.value)
+        elif self.snmp_type == 'IPADDR':
+            self.value = session.ipaddr(variable.value)
+        elif self.snmp_type == 'OCTETSTR':
+            self.value = session.octetstr(variable.value)
+        elif self.snmp_type == 'TICKS':
+            self.value = session.ticks(variable.value)
+        elif self.snmp_type == 'OPAQUE':
+            self.value = session.opaque(variable.value)
+        elif self.snmp_type == 'OBJECTID':
+            self.value = session.objectid(variable.value)
+        elif self.snmp_type == 'NETADDR':
+            self.value = session.netaddr(variable.value)
+        elif self.snmp_type == 'COUNTER':
+            self.value = session.counter(variable.value)
+        elif self.snmp_type == 'NULL':
+            self.value = session.null(variable.value)
+        elif self.snmp_type == 'BITS':
+            self.value = session.bits(variable.value)
+        elif self.snmp_type == 'UINTEGER':
+            self.value = session.uinteger(variable.value)
+        else:
+            self.value = session.default(variable.value)
+        
+        
 
 # Session API
 
@@ -28,24 +80,16 @@ class Session(easysnmp.Session):
         return int(value)
 
     def ipaddr(self, value):
-        # https://tools.ietf.org/html/rfc4001
-        # IPv4 and IPv6 only
         import ipaddress
+        return ipaddress.ip_address(value)
                 
-        if len(value) == 4:
-            return ipaddress.IPv4Address('.'.join(['%d' % ord(o) for o in value]))
-        elif len(value) == 16:
-            return ipaddress.IPv6Address(':'.join(['%02x' % ord(o) for o in value]))
-        else:
-            # raise ValueError?
-            return value
-
     def octetstr(self, value):
         # TODO: Come up with some clever logic!
         return value
 
     def ticks(self, value):
         # TODO: convert to datetime.timedelta
+        return datetime.timedelta(seconds=int(value))
         return int(value)
 
     def opaque(self, value):
@@ -74,51 +118,41 @@ class Session(easysnmp.Session):
 
     def default(self, value):
         return value
-
-    def _convert(self, variable):
-        # variable.oid, 
-        # variable.oid_index, 
-        # variable.snmp_type, 
-        # variable.value
-
-        if variable.snmp_type == 'INTEGER32':
-            variable.value = self.integer32(variable.value)
-        elif variable.snmp_type == 'INTEGER':
-            variable.value = self.integer(variable.value)
-        elif variable.snmp_type == 'UNSIGNED32':
-            variable.value = self.unsigned32(variable.value)
-        elif variable.snmp_type == 'IPADDR':
-            variable.value = self.ipaddr(variable.value)
-        elif variable.snmp_type == 'OCTETSTR':
-            variable.value = self.octetstr(variable.value)
-        elif variable.snmp_type == 'TICKS':
-            variable.value = self.ticks(variable.value)
-        elif variable.snmp_type == 'OPAQUE':
-            variable.value = self.opaque(variable.value)
-        elif variable.snmp_type == 'OBJECTID':
-            variable.value = self.objectid(variable.value)
-        elif variable.snmp_type == 'NETADDR':
-            variable.value = self.netaddr(variable.value)
-        elif variable.snmp_type == 'COUNTER':
-            variable.value = self.counter(variable.value)
-        elif variable.snmp_type == 'NULL':
-            variable.value = self.null(variable.value)
-        elif variable.snmp_type == 'BITS':
-            variable.value = self.bits(variable.value)
-        elif variable.snmp_type == 'UINTEGER':
-            variable.value = self.uinteger(variable.value)
-        else:
-            variable.value = self.value(variable.value)
-
-        # Morph the class
-        variable.__class__ == SNMPVariable
-        return variable
-        
+  
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-
+        
+    def _snmp(self, method, *args, **kwargs):
+        v = method(*args, **kwargs)
+        if isinstance(v, easysnmp.SNMPVariable):
+            return SNMPVariable(self, v)
+        elif isinstance(v, (easysnmp.variables.SNMPVariableList, list)):
+            return [SNMPVariable(self, i) for i in v]
+        else:
+            raise TypeError('{} returned unknown type {}'.format(method, type(v)))
+                    
     def get(self, *args, **kwargs):
-        return self._convert(super().get(*args, **kwargs))
+        return self._snmp(super().get, *args, **kwargs)
+    
+    def get_bulk(self, *args, **kwargs):
+        return self._snmp(super().get_bulk, *args, **kwargs)
+    
+    def bulkwalk(self, *args, **kwargs):
+        return self._snmp(super().bulkwalk, *args, **kwargs)
+    
+    def walk(self, *args, **kwargs):
+        return self._snmp(super().walk, *args, **kwargs)
+
+    def set(selfs, *args, **kwargs):
+        raise NotImplementedError
+    
+    def set_multiple(selfs, *args, **kwargs):
+        raise NotImplementedError
+    
+    def get_next(selfs, *args, **kwargs):
+        raise NotImplementedError
+
+
 
 
 # Easy API

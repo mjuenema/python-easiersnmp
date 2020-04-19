@@ -1,6 +1,6 @@
 # easiersnmp
 
-**This project is currently in the planning stage**
+**This project is currently in alpha stage**
 
 *easiersnmp* is a wrapper around [*easysnmp*](https://github.com/kamakazikamikaze/easysnmp) to make it even easier to use. 
 It also includes an alternative implementation of [*easysnmptable*](https://github.com/wolcomm/easysnmptable).
@@ -48,18 +48,18 @@ The table below shows how values are converted.
 |---|---|
 | ``INTEGER32`` | ``int`` |
 | ``INTEGER`` | ``int`` |
-| ``UNSIGNED32`` | int |
-| ``GAUGE`` | int |
+| ``UNSIGNED32`` | ``int`` |
+| ``GAUGE`` | ``int`` |
 | ``IPADDR`` | ``ipaddress.IPv4Address``/``ipaddress.IPv6Address`` |
 | ``OCTETSTR`` | (read note below) |
 | ``TICKS`` | ``datetime.timedelta`` |
 | ``OPAQUE`` | |
 | ``OBJECTID`` | |
 | ``NETADDR`` | ``ipaddress.IPv4Address``/``ipaddress.IPv6Address`` |
-| ``COUNTER64`` | int |
-| ``NULL`` | None |
-| ``BITS`` | int |
-| ``UINTEGER`` | int |
+| ``COUNTER64`` | ``int`` |
+| ``NULL`` | ``None`` |
+| ``BITS`` | ``int`` |
+| ``UINTEGER`` | ``int`` |
 
 The ``OCTETSTR`` SNMP type is commonly used as a container for values that cannot be represented in any other
 SNMP type. It is impossible to know the correct interpretation of an ``OCTETSTR`` without parsing the relevant
