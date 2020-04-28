@@ -1,6 +1,7 @@
 
 import easysnmp
 import datetime
+import ipaddress
 
 # SNMPVariable
 class SNMPVariable(object):
@@ -80,7 +81,6 @@ class Session(easysnmp.Session):
         return int(value)
 
     def ipaddr(self, value):
-        import ipaddress
         return ipaddress.ip_address(value)
                 
     def octetstr(self, value):
@@ -88,9 +88,7 @@ class Session(easysnmp.Session):
         return value
 
     def ticks(self, value):
-        # TODO: convert to datetime.timedelta
         return datetime.timedelta(seconds=int(value))
-        return int(value)
 
     def opaque(self, value):
         return value
@@ -110,8 +108,7 @@ class Session(easysnmp.Session):
         return None
 
     def bits(self, value):
-        # TODO: Convert into list of True/False?
-        return value
+        return int(value)
 
     def uinteger(self, value):
         return int(value)
