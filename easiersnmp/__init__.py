@@ -1,120 +1,123 @@
-
 import easysnmp
+import easysnmp.utils
 import datetime
+import string
 import ipaddress
+import collections
+
 
 # SNMPVariable
 class SNMPVariable(object):
-    def __init__(self, session, variable):
-        """The interface of `easiersnmp.SNMPVariable` is different from
-           `easysnmp.SNMPVariable`. It is not meant to be instantiated 
-           directly by other modules than `easiersnmp`.
-           
-           :param session: Instance of `easiersnmp.Session` as it contains
-                the conversion functions which may be overwritten by
-                derived classes.
-            :param variable: Instance of `easysnmp.SNMPVariable` whose 
-                attributes will be extracted to populate this class.
-           
-        """
-        
-        
-        # Copy `oid`, `oid_index` and `snmp_type`. 
-        #
-        self.oid = variable.oid
-        self.oid_index = variable.oid_index
-        self.snmp_type = variable.snmp_type
-        
-        
-        # Convert value.
-        #
+    def __init__(self, v):
+        assert isinstance(v, easysnmp.SNMPVariable)
+        self.v = v
+
+    def __repr__(self):
+        return '<{0} value={1} (oid={2}, oid_index={3}, snmp_type={4}'.format(
+                self.__class__.__name__, 
+                self.value, 
+                self.oid, 
+                self.oid_index.encode('ascii', 'backslashreplace'),
+                self.snmp_type)
+
+    @property
+    def oid(self):
+        return self.v.oid
+
+    @property
+    def oid_index(self):
+        return self.v.oid_index
+
+    @property
+    def snmp_type(self):
+        return self.v.snmp_type
+
+    @property
+    def value(self):
         if self.snmp_type == 'INTEGER32':
-            self.value = session.integer32(variable.value)
+            return int(self.v.value)
         elif self.snmp_type == 'INTEGER':
-            self.value = session.integer(variable.value)
+            return int(self.v.value)
         elif self.snmp_type == 'UNSIGNED32':
-            self.value = session.unsigned32(variable.value)
+            return int(self.v.value)
         elif self.snmp_type == 'GAUGE':
-            self.value = session.gauge(variable.value)
+            return int(self.v.value)
         elif self.snmp_type == 'IPADDR':
-            self.value = session.ipaddr(variable.value)
+            return ipaddress.ip_address(self.v.value).exploded
         elif self.snmp_type == 'OCTETSTR':
-            self.value = session.octetstr(variable.value)
+            # Try to be clever here as we don't have access to the DISPLAY-HINT.
+            if len(self.v.value) == 6:
+                # MAC Address
+                return ':'.join(['{:02x}'.format(ord(c)) for c in self.v.value])
+            else:
+                return self.v.value
         elif self.snmp_type == 'TICKS':
-            self.value = session.ticks(variable.value)
+            return int(self.v.value)
         elif self.snmp_type == 'OPAQUE':
-            self.value = session.opaque(variable.value)
+            return self.v.value
         elif self.snmp_type == 'OBJECTID':
-            self.value = session.objectid(variable.value)
+            return self.v.value
         elif self.snmp_type == 'NETADDR':
-            self.value = session.netaddr(variable.value)
+            raise NotImplementedError(str(self))
+            return self.ipaddress
         elif self.snmp_type == 'COUNTER':
-            self.value = session.counter(variable.value)
+            return int(self.v.value)
         elif self.snmp_type == 'NULL':
-            self.value = session.null(variable.value)
+            return None
         elif self.snmp_type == 'BITS':
-            self.value = session.bits(variable.value)
+            return self.v.value
         elif self.snmp_type == 'UINTEGER':
-            self.value = session.uinteger(variable.value)
+            return int(self.v.value)
         else:
-            self.value = session.default(variable.value)
-        
-        
+            return self.v.value
+
+
+# Conversion functions
+#
+def value(v):
+    if isinstance(v, SNMPVariable):
+        return v.value
+    else:
+        return v
+
+def valuedecorator(v):
+    def wraper(v):
+        return value(v)
+
+@valuedecorator
+def truthvalue(v):
+    if v in (1,2):
+        return v == 1
+    else:
+        raise ValueError('Not a valid TruthValue')
+
+@valuedecorator
+def ipaddr(v):
+    return ipaddress.ip_address(v).exploded
+netmask = ipaddr
+
+@valuedecorator
+def macaddress(v):
+    if len(v) == 6:
+        return ':'.join(['%02x' % (i) for i in v])
+    else:
+        raise ValueError('Not a valid MAC Address')
+physaddress = macaddress
+
+@valuedecorator
+def displaystring(v, errors='replace'):
+    return v.encode(encoding='ascii', errors=errors)
+
+
+@valuedecorator
+def hexstring(v):
+    return ''.join(['{:02x}'.format(ord(c)) for c in s])
+
 
 # Session API
-
+#
 class Session(easysnmp.Session):
 
-    # Type conversion functions. These can be overridden
-    # in derived classes if desired.
-    #
-    def integer32(self, value):
-        return int(value)
-
-    def integer(self, value):
-        return int(value)
-
-    def unsigned32(self, value):
-        return int(value)
-
-    def gauge(self, value):
-        return int(value)
-
-    def ipaddr(self, value):
-        return ipaddress.ip_address(value)
-                
-    def octetstr(self, value):
-        # TODO: Come up with some clever logic!
-        return value
-
-    def ticks(self, value):
-        return datetime.timedelta(seconds=int(value))
-
-    def opaque(self, value):
-        return value
-
-    def objectid(self, value):
-        return value
-
-    def netaddr(self, value):
-        # What is this type?
-        return value
-
-    def counter(self, value):
-        return int(value)
-
-    def null(self, value):
-        # TODO: correct?
-        return None
-
-    def bits(self, value):
-        return int(value)
-
-    def uinteger(self, value):
-        return int(value)
-
-    def default(self, value):
-        return value
   
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -122,9 +125,9 @@ class Session(easysnmp.Session):
     def _snmp(self, method, *args, **kwargs):
         v = method(*args, **kwargs)
         if isinstance(v, easysnmp.SNMPVariable):
-            return SNMPVariable(self, v)
+            return SNMPVariable(v)
         elif isinstance(v, (easysnmp.variables.SNMPVariableList, list)):
-            return [SNMPVariable(self, i) for i in v]
+            return [SNMPVariable( i) for i in v]
         else:
             raise TypeError('{} returned unknown type {}'.format(method, type(v)))
                     
@@ -140,16 +143,24 @@ class Session(easysnmp.Session):
     def walk(self, *args, **kwargs):
         return self._snmp(super().walk, *args, **kwargs)
 
-    def set(selfs, *args, **kwargs):
+    def set(self, *args, **kwargs):
+        return super().set(*args, **kwargs) 
         raise NotImplementedError
     
-    def set_multiple(selfs, *args, **kwargs):
+    def set_multiple(self, *args, **kwargs):
         raise NotImplementedError
     
-    def get_next(selfs, *args, **kwargs):
+    def get_next(self, *args, **kwargs):
         raise NotImplementedError
 
+    def bulktable(self, *args, **kwargs):
+        table = collections.defaultdict(dict)
+        for row in self._snmp(super().bulkwalk, *args, **kwargs):
+            table[row.oid_index][row.oid] = row
+        return table.values()
 
-
-
-# Easy API
+    def table(self, *args, **kwargs):
+        table = collections.defaultdict(dict)
+        for row in self._snmp(super().walk, *args, **kwargs):
+            table[row.oid_index][row.oid] = row
+        return table.values()
