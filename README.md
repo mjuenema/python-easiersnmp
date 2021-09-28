@@ -1,7 +1,5 @@
 # easiersnmp
 
-**This project is currently in alpha stage**
-
 *easiersnmp* is a wrapper around [*easysnmp*](https://github.com/kamakazikamikaze/easysnmp) to make it even easier to use. 
 It also includes an alternative implementation of [*easysnmptable*](https://github.com/wolcomm/easysnmptable).
 
@@ -64,13 +62,3 @@ The table below shows how values are converted.
 The ``OCTETSTR`` SNMP type is commonly used as a container for values that cannot be represented in any other
 SNMP type. It is impossible to know the correct interpretation of an ``OCTETSTR`` without parsing the relevant
 SNMP MIB. 
-
-*easiersnmp* can be told to use some "smarts" for guessing the correct representation by setting
-specific global variables to ``True``. 
-
-| Variable | Interpretation of ``OCTETSTR`` |
-|---|---|
-| ``easiersnmp.OCTETSTR_TO_IPADDRESS`` | Convert ``OCTETSTR`` to ``ipaddress.``, if possible |
-| ``easiersnmp.OCTETSTR_TO_IPV4ADDRESS`` | Convert ``OCTETSTR`` to ``ipaddress.``, if possible |
-| ``easiersnmp.OCTETSTR_TO_IPV6ADDRESS`` | Convert ``OCTETSTR`` to ``ipaddress.``, if possible |
-| ``easiersnmp.OCTETSTR_TO_MACADDRESS`` | Convert ``OCTETSTR`` to ``ipaddress.``, if possible |
