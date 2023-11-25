@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "easiersnmp"
+version = "0.2.0"
+description = "easiersnmp is a wrapper around easysnmp to make it even easier to use"
+authors = ["Markus Juenemann <markus@juenemann.net>"]
+readme = "README.md"
+license = "BSD 2-Clause License"
+packages = [{include = "easiersnmp"}]
+
+[tool.poetry.dependencies]
+python = "^3.7"
+easysnmp = "^0.2.6"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
