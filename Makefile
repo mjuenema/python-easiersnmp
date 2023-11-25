@@ -5,16 +5,26 @@ NOSE := nosetests --failed --verbose --no-byte-compile --logging-level=DEBUG --d
 #FLAKE8 := python3 -m flake8
 
 all:
-	@echo "make test"
-	@echo "make debug"
+	@echo "make build        "
+	@echo "make testpublish  - Publish to TesPyPi"
+	@echo "make publish      - Publish to PyPi"
 
-test: clean
-	$(NOSE) tests/*.py
+build:
+	poetry build
 
+testpublish: build
+	 poetry publish -r test-pypi
 
-debug: clean
-	$(NOSE) --pdb tests/*.py
+publish: build
+	 poetry publish
 
-clean:
-	@[ -f .noseids ] && rm -f .noseids
+#test: clean
+#	$(NOSE) tests/*.py
+#
+#
+#debug: clean
+#	$(NOSE) --pdb tests/*.py
+#
+#clean:
+#	@[ -f .noseids ] && rm -f .noseids
     
