@@ -62,3 +62,10 @@ The table below shows how values are converted.
 The ``OCTETSTR`` SNMP type is commonly used as a container for values that cannot be represented in any other
 SNMP type. It is impossible to know the correct interpretation of an ``OCTETSTR`` without parsing the relevant
 SNMP MIB. 
+
+## Acknowledgements
+
+I'd like to acknowledge the following projects.
+
+* The [EasySNMP](https://pypi.org/project/easysnmp/) project of which EasierSNMP is just a thin wrapper.
+* The [EasySNMP Table](https://pypi.org/project/easysnmptable/) project which inspired my own implementation of a ``table()`` method.
